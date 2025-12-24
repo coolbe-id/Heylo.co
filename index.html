@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Meta Tags & Favicon -->
+    <meta name="description" content="Heylo Pro - Platform Cloud Mining Bitcoin Otomatis.">
+    <meta name="theme-color" content="#000000">
+    <meta property="og:title" content="Heylo Pro | BTC Cloud Mining">
+    <meta property="og:description" content="Tambang BTC Tanpa Batas dengan sistem withdraw instan.">
+    <meta property="og:image" content="https://i.ibb.co.com/v49hYYS3/unnamed-27.jpg">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="https://i.ibb.co.com/v49hYYS3/unnamed-27.jpg" type="image/png">
+
+    <title>Heylo Pro | BTC Cloud Mining</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs (Compat version) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-black: #000000;
+            --zinc-900: #09090b;
+            --zinc-800: #18181b;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-black);
+            color: #ffffff;
+            overscroll-behavior-y: contain;
+            overflow-x: hidden;
+        }
+        .glass {
+            background: rgba(15, 15, 15, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        /* Scroll Handling */
+        .scroll-container {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+        /* Withdraw Popup Animation */
+        #withdraw-popup {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            touch-action: none;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #withdraw-popup.active {
+            transform: translateY(0%);
+        }
+        .handle-bar {
+            width: 40px;
+            height: 5px;
+            background: #3f3f46;
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            flex-shrink: 0;
+        }
+        .page-fade { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hidden { display: none !important; }
+        
+        /* Guest Animation */
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 60%;
+            height: 60%;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+        }
+        .floating { animation: floating 3s ease-in-out infinite; }
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Crypto Card */
+        .crypto-card { transition: all 0.3s ease; }
+        .crypto-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); }
+        .price-up { color: #10b981; }
+        .price-down { color: #ef4444; }
+        
+        /* Traffic Animation */
+        .traffic-bars { display: flex; align-items: flex-end; gap: 2px; height: 30px; }
+        .traffic-bar {
+            width: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 1px;
+            animation: trafficAnim 1.2s infinite ease-in-out;
+        }
+        @keyframes trafficAnim {
+            0%, 100% { height: 20%; opacity: 0.3; }
+            50% { height: 100%; opacity: 1; }
+        }
+        
+        /* Referral Banner */
+        .referral-banner {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .referral-banner::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+        }
+        
+        /* Buttons */
+        .btn-wa { background: #25d366; color: white; }
+        .btn-link { background: #4f46e5; color: white; }
+        
+        /* Payment Styles */
+        .payment-card {
+            transition: all 0.2s;
+        }
+        .payment-card.selected {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.02);
+        }
+        .payment-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+            position: relative;
+        }
+        .payment-card.disabled::after {
+            content: 'MAINTENANCE';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ef4444;
+            color: white;
+            font-size: 9px;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 4px;
+            z-index: 10;
+        }
+
+        /* QR Placeholder */
+        .qr-placeholder {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-left-color: #ffffff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-[200] transform -translate-y-32 transition-all duration-500 pointer-events-none w-[90%] max-w-sm">
+        <div class="bg-white text-black px-6 py-4 rounded-2xl font-bold shadow-2xl text-center">
+            <span id="toast-msg">Notifikasi</span>
+        </div>
+    </div>
+
+    <!-- Header Area -->
+    <header class="p-5 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-40 border-b border-white/5">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                <span class="text-black font-black italic">H</span>
+            </div>
+            <span class="font-bold tracking-tighter text-xl">HEYLO</span>
+        </div>
+        <div id="auth-actions" class="flex items-center gap-3">
+            <!-- Populated by JS -->
+        </div>
+    </header>
+
+    <!-- GUEST VIEW -->
+    <div id="guest-view" class="p-8 space-y-12 py-24 text-center relative">
+        <div class="hero-gradient"></div>
+        <div class="space-y-6 floating">
+            <div class="flex justify-center">
+                <div class="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-lg">
+                    <i class="fab fa-bitcoin text-5xl text-yellow-400"></i>
+                </div>
+            </div>
+            <h1 class="text-5xl font-black tracking-tighter leading-none">TAMBANG BTC <br><span class="text-zinc-600">TANPA BATAS.</span></h1>
+            <p class="text-zinc-500 text-sm max-w-xs mx-auto">Platform cloud mining otomatis dengan sistem withdraw instan ke rekening bank lokal.</p>
+            
+            <!-- Features -->
+            <div class="grid grid-cols-3 gap-4 mt-8">
+                <div class="glass p-4 rounded-2xl">
+                    <i class="fas fa-bolt text-yellow-400 text-xl mb-2"></i>
+                    <p class="text-xs font-bold">CEPAT</p>
+                </div>
+                <div class="glass p-4 rounded-2xl">
+                    <i class="fas fa-shield-alt text-green-400 text-xl mb-2"></i>
+                    <p class="text-xs font-bold">AMAN</p>
+                </div>
+                <div class="glass p-4 rounded-2xl">
+                    <i class="fas fa-coins text-blue-400 text-xl mb-2"></i>
+                    <p class="text-xs font-bold">CUAN</p>
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-col gap-3 pt-6">
+            <button onclick="openAuth('register')" class="bg-white text-black py-4 rounded-2xl font-black text-lg shadow-lg transform transition hover:scale-105 active:scale-95">Daftar Akun Baru</button>
+            <button onclick="openAuth('login')" class="border border-white/10 py-4 rounded-2xl font-bold hover:bg-white/5 transition-all">Masuk</button>
+        </div>
+    </div>
+
+    <!-- MAIN VIEW -->
+    <div id="main-view" class="hidden">
+        
+        <!-- HOME PAGE -->
+        <div id="page-home" class="page-fade p-6 space-y-6">
+            <!-- IDR Card -->
+            <div class="glass rounded-[2.5rem] p-8 text-center relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-5">
+                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.97 0-1.72 1.39-3.04 3.11-3.41V4h2.67v1.91c1.39.3 2.58 1.16 3.02 2.8h-1.93c-.46-.86-1.29-1.31-2.44-1.31-1.57 0-2.31.75-2.31 1.54 0 .88.69 1.44 2.99 2.02 2.69.66 3.86 1.91 3.86 4.09 0 1.74-1.17 3.32-3.23 3.63z"/></svg>
+                </div>
+                <p class="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-1">Total Saldo IDR</p>
+                <h2 class="text-5xl font-black tracking-tighter">Rp <span id="display-idr">0</span></h2>
+                <div class="flex gap-3 justify-center pt-6">
+                    <button onclick="handleExchange()" class="bg-white text-black text-xs font-black px-5 py-2.5 rounded-full flex items-center gap-2">
+                        Tukar Hasil
+                    </button>
+                    <button onclick="openWithdraw()" class="bg-zinc-800 text-white text-xs font-black px-5 py-2.5 rounded-full">
+                        Withdraw
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mining Stats -->
+            <div class="glass rounded-[2.5rem] p-6 space-y-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">BTC Mining Result</p>
+                        <p class="text-3xl font-mono font-black mt-1" id="display-btc">0.00000000</p>
+                    </div>
+                    <div id="display-speed-badge" class="bg-zinc-800 px-3 py-1.5 rounded-xl border border-white/5">
+                        <span class="text-[10px] font-black italic">0x SPEED</span>
+                    </div>
+                </div>
+                <div class="h-2 w-full bg-zinc-900 rounded-full overflow-hidden border border-white/5">
+                    <div id="mining-bar" class="h-full bg-white transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0.3)]" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Speed Upgrade -->
+            <div class="space-y-4">
+                <h3 class="font-black text-xs uppercase tracking-[0.2em] text-zinc-500 ml-2">Paket Kecepatan</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Paket 1 -->
+                    <div onclick="handleDeposit(10000, 1)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Basic</p>
+                        <p class="text-lg font-black">1x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 10.000</p>
+                    </div>
+                    <!-- Paket 2 -->
+                    <div onclick="handleDeposit(30000, 3)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Starter</p>
+                        <p class="text-lg font-black">3x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 30.000</p>
+                    </div>
+                    <!-- Paket 3 -->
+                    <div onclick="handleDeposit(50000, 5)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Bronze</p>
+                        <p class="text-lg font-black">5x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 50.000</p>
+                    </div>
+                    <!-- Paket 4 -->
+                    <div onclick="handleDeposit(100000, 10)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Silver</p>
+                        <p class="text-lg font-black">10x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 100.000</p>
+                    </div>
+                    <!-- Paket 5 -->
+                    <div onclick="handleDeposit(140000, 14)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Gold</p>
+                        <p class="text-lg font-black">14x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 140.000</p>
+                    </div>
+                    <!-- Paket 6 -->
+                    <div onclick="handleDeposit(250000, 25)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Platinum</p>
+                        <p class="text-lg font-black">25x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 250.000</p>
+                    </div>
+                    <!-- Paket 7 -->
+                    <div onclick="handleDeposit(500000, 50)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Diamond</p>
+                        <p class="text-lg font-black">50x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 500.000</p>
+                    </div>
+                    <!-- Paket 8 -->
+                    <div onclick="handleDeposit(700000, 70)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Titanium</p>
+                        <p class="text-lg font-black">70x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 700.000</p>
+                    </div>
+                    <!-- Paket 9 -->
+                    <div onclick="handleDeposit(900000, 90)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Master</p>
+                        <p class="text-lg font-black">90x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 900.000</p>
+                    </div>
+                    <!-- Paket 10 -->
+                    <div onclick="handleDeposit(1200000, 120)" class="pkg-card glass p-5 rounded-[2rem] border-white/5 hover:border-white/20 transition-all cursor-pointer">
+                        <p class="text-zinc-500 text-[10px] font-bold uppercase">Whale</p>
+                        <p class="text-lg font-black text-zinc-300">120x Speed</p>
+                        <p class="text-xs font-bold text-zinc-400 mt-1">Rp 1.200.000</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY PAGE -->
+        <div id="page-history" class="page-fade p-6 space-y-6 hidden">
+            <h2 class="text-3xl font-black tracking-tighter">Riwayat</h2>
+            <div id="history-container" class="space-y-3 pb-10">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- REFERRAL PAGE -->
+        <div id="page-referral" class="page-fade p-6 space-y-6 hidden text-center">
+            <div class="referral-banner">
+                <h3 class="text-xl font-black text-white mb-2">Dapatkan Komisi Lebih!</h3>
+                <p class="text-sm text-white/80">Bagikan referral dan dapatkan komisi hingga Rp 10.000</p>
+            </div>
+            
+            <div class="glass p-10 rounded-[2.5rem] space-y-6">
+                <div class="w-16 h-16 bg-white rounded-3xl mx-auto flex items-center justify-center">
+                    <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
+                <h3 class="text-2xl font-black tracking-tighter">Program Referral</h3>
+                <p class="text-zinc-500 text-sm">Bagikan link Anda dan dapatkan komisi setiap teman Anda melakukan deposit.</p>
+                
+                <div class="flex justify-center gap-6">
+                    <div class="text-center">
+                        <p class="text-3xl font-black" id="team-count">0</p>
+                        <p class="text-xs text-zinc-500 font-bold uppercase">Team</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-3xl font-black">10%</p>
+                        <p class="text-xs text-zinc-500 font-bold uppercase">Komisi</p>
+                    </div>
+                </div>
+                
+                <div class="bg-black border border-white/5 p-4 rounded-2xl flex justify-between items-center group">
+                    <span id="ref-code-text" class="font-black text-sm tracking-widest text-zinc-400 uppercase">Loading...</span>
+                    <button onclick="copyReferral()" class="bg-white text-black px-4 py-1.5 rounded-lg text-xs font-black">Salin</button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-6">
+                    <button onclick="shareWhatsApp()" class="btn-wa py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button onclick="copyReferral()" class="btn-link py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                        <i class="fas fa-link"></i>
+                        <span>Salin Link</span>
+                    </button>
+                </div>
+                
+                <div class="text-xs text-zinc-500 mt-4">
+                    <p>Undangan via WhatsApp: <span class="font-bold text-white">+Rp 10.000</span></p>
+                    <p>Undangan via Link: <span class="font-bold text-white">+Rp 5.000</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRYPTO PRICE PAGE -->
+        <div id="page-crypto" class="page-fade p-6 space-y-6 hidden">
+            <h2 class="text-3xl font-black tracking-tighter">Harga Crypto</h2>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <!-- Bitcoin -->
+                <div class="crypto-card glass rounded-[2rem] p-5">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                                <i class="fab fa-bitcoin text-black"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">Bitcoin</h3>
+                                <p class="text-xs text-zinc-500">BTC</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold">Rp <span id="btc-price">1,050,000,000</span></p>
+                            <p class="text-xs price-up">+2.5%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 traffic-bars" id="traffic-btc"></div>
+                </div>
+                
+                <!-- Ethereum -->
+                <div class="crypto-card glass rounded-[2rem] p-5">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                                <i class="fab fa-ethereum text-white"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">Ethereum</h3>
+                                <p class="text-xs text-zinc-500">ETH</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold">Rp <span id="eth-price">45,000,000</span></p>
+                            <p class="text-xs price-up">+1.8%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 traffic-bars" id="traffic-eth"></div>
+                </div>
+                
+                <!-- Binance Coin -->
+                <div class="crypto-card glass rounded-[2rem] p-5">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center">
+                                <span class="font-black text-black text-xs">BNB</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">Binance Coin</h3>
+                                <p class="text-xs text-zinc-500">BNB</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold">Rp <span id="bnb-price">6,500,000</span></p>
+                            <p class="text-xs price-down">-0.7%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 traffic-bars" id="traffic-bnb"></div>
+                </div>
+                
+                <!-- Cardano -->
+                <div class="crypto-card glass rounded-[2rem] p-5">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center">
+                                <span class="font-black text-white text-xs">ADA</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">Cardano</h3>
+                                <p class="text-xs text-zinc-500">ADA</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold">Rp <span id="ada-price">8,500</span></p>
+                            <p class="text-xs price-up">+3.2%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 traffic-bars" id="traffic-ada"></div>
+                </div>
+                
+                <!-- Solana -->
+                <div class="crypto-card glass rounded-[2rem] p-5">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                                <span class="font-black text-white text-xs">SOL</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold">Solana</h3>
+                                <p class="text-xs text-zinc-500">SOL</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold">Rp <span id="sol-price">2,800,000</span></p>
+                            <p class="text-xs price-up">+4.5%</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 traffic-bars" id="traffic-sol"></div>
+                </div>
+            </div>
+            
+            <div class="text-center text-xs text-zinc-500 mt-4">
+                <p>Harga diperbarui setiap 5 detik</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/90 p-6 backdrop-blur-md">
+        <div class="bg-zinc-900 border border-white/10 w-full max-w-sm rounded-[2.5rem] p-0 relative flex flex-col max-h-[90vh]">
+            <div class="p-8 pb-2 flex justify-between items-center">
+                <h2 id="auth-title" class="text-2xl font-black">Masuk Akun</h2>
+                <button onclick="closeAuth()" class="text-zinc-500 p-2">✕</button>
+            </div>
+            <div class="scroll-container custom-scrollbar flex-1 px-8 py-4 space-y-4" id="auth-form-content">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SWIPE WITHDRAW POPUP -->
+    <div id="withdraw-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden opacity-0 transition-opacity duration-300" onclick="closeWithdraw()"></div>
+    <div id="withdraw-popup" class="fixed bottom-0 left-0 w-full bg-zinc-900 z-[160] rounded-t-[3.5rem] glass shadow-2xl custom-scrollbar">
+        <div class="handle-bar" id="swipe-area"></div>
+        
+        <div class="p-8 pb-14 space-y-6">
+            <div class="text-center">
+                <h3 class="text-2xl font-black tracking-tighter">Tarik Dana</h3>
+                <p class="text-zinc-500 text-xs mt-1">Saldo akan diproses otomatis 1x24 jam.</p>
+            </div>
+
+            <!-- Target Bank Details -->
+            <div class="bg-black/40 border border-white/5 rounded-3xl p-6 space-y-4">
+                <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                    <span class="text-[10px] font-black text-zinc-500 uppercase">Tujuan Transfer</span>
+                    <span class="bg-white text-black text-[9px] font-black px-2 py-0.5 rounded" id="wd-bank-name">-</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-zinc-400" id="wd-user-name">-</span>
+                    <span class="text-xs font-mono font-black" id="wd-bank-acc">-</span>
+                </div>
+            </div>
+
+            <!-- Withdraw Amount Selector -->
+            <div class="space-y-3">
+                <p class="text-xs font-bold text-zinc-500">Jumlah Penarikan</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="setWithdrawAmount(50000)" class="bg-black/40 border border-white/5 py-3 rounded-xl text-xs font-bold">50.000</button>
+                    <button onclick="setWithdrawAmount(100000)" class="bg-black/40 border border-white/5 py-3 rounded-xl text-xs font-bold">100.000</button>
+                    <button onclick="setWithdrawAmount(250000)" class="bg-black/40 border border-white/5 py-3 rounded-xl text-xs font-bold">250.000</button>
+                    <button onclick="setWithdrawAmount(500000)" class="bg-black/40 border border-white/5 py-3 rounded-xl text-xs font-bold">500.000</button>
+                    <button onclick="setWithdrawAmount(1000000)" class="bg-black/40 border border-white/5 py-3 rounded-xl text-xs font-bold">1.000.000</button>
+                    <button onclick="setWithdrawAmount(sessionData.idr)" class="bg-black/40 border border-white/5 py-3 rounded-xl text-xs font-bold">Semua</button>
+                </div>
+            </div>
+
+            <div class="bg-white/5 rounded-[2rem] p-8 text-center border border-white/5">
+                <p class="text-[10px] text-zinc-500 font-black uppercase mb-1">Jumlah Penarikan</p>
+                <p class="text-4xl font-black tracking-tighter">Rp <span id="wd-total-text">0</span></p>
+            </div>
+
+            <button onclick="confirmWithdrawal()" class="w-full bg-white text-black py-5 rounded-2xl font-black text-lg hover:bg-zinc-200 active:scale-95 transition-all">
+                KONFIRMASI PENARIKAN
+            </button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav id="bottom-nav" class="hidden fixed bottom-0 left-0 w-full glass z-50 px-6 py-4 border-t border-white/5">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <button onclick="switchTab('home')" class="nav-btn opacity-40 active" id="btn-home">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            </button>
+            <button onclick="switchTab('history')" class="nav-btn opacity-40" id="btn-history">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </button>
+            <button onclick="switchTab('crypto')" class="nav-btn opacity-40" id="btn-crypto">
+                <i class="fas fa-chart-line w-6 h-6"></i>
+            </button>
+            <button onclick="switchTab('referral')" class="nav-btn opacity-40" id="btn-referral">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDdSg1N0RWimvqduIkuTNoXzY1uW8-qPwg",
+            authDomain: "pinup-f0c6d.firebaseapp.com",
+            projectId: "pinup-f0c6d",
+            storageBucket: "pinup-f0c6d.firebasestorage.app",
+            messagingSenderId: "975740522083",
+            appId: "1:975740522083:web:2c2e80b418a6d2255db256",
+            measurementId: "G-T1Z5WKYD0G"
+        };
+
+        // Initialize Firebase
+        let app, auth, db;
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            console.log("Firebase initialized successfully");
+        } catch (e) {
+            console.error("Firebase init error:", e);
+        }
+
+        // --- LOGIC STATE ---
+        const BTC_RATE = 1050000000; 
+        let currentUser = null; 
+        let userDataListener = null; 
+        let sessionData = {
+            btc: 0,
+            idr: 0,
+            multiplier: 0, 
+            history: [],
+            bank: '-',
+            bankAcc: '-',
+            name: '-',
+            refCode: ''
+        };
+        
+        let miningInterval = null;
+        let cryptoUpdateInterval = null;
+        let withdrawAmount = 0;
+
+        // Crypto prices (Simulated)
+        let cryptoPrices = {
+            btc: 1050000000,
+            eth: 45000000,
+            bnb: 6500000,
+            ada: 8500,
+            sol: 2800000
+        };
+
+        // Payment state
+        let pendingPayment = {
+            amount: 0,
+            multiplier: 0,
+            method: '',
+            proof: '' // Not needed if using Balance
+        };
+
+        // --- APP INITIALIZATION ---
+        function initApp() {
+            initTrafficBars();
+
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    currentUser = user;
+                    setupDashboard(user.uid);
+                } else {
+                    currentUser = null;
+                    if (userDataListener) {
+                        userDataListener();
+                        userDataListener = null;
+                    }
+                    renderGuest();
+                }
+            });
+        }
+
+        function initTrafficBars() {
+            const ids = ['btc', 'eth', 'bnb', 'ada', 'sol'];
+            ids.forEach(id => {
+                const container = document.getElementById(`traffic-${id}`);
+                if (container) {
+                    container.innerHTML = '';
+                    for (let i = 0; i < 15; i++) {
+                        const bar = document.createElement('div');
+                        bar.className = 'traffic-bar';
+                        bar.style.animationDelay = `${Math.random() * 1}s`;
+                        container.appendChild(bar);
+                    }
+                }
+            });
+        }
+
+        // --- FIRESTORE FUNCTIONS ---
+        function setupDashboard(uid) {
+            document.getElementById('guest-view').classList.add('hidden');
+            document.getElementById('main-view').classList.remove('hidden');
+            document.getElementById('bottom-nav').classList.remove('hidden');
+            
+            // Update Header with User Name
+            document.getElementById('auth-actions').innerHTML = `
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center border border-white/10">
+                        <span class="text-[10px] font-black text-white">${(sessionData.name || 'User').charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div class="flex flex-col items-start">
+                        <span class="text-xs font-bold leading-none">${sessionData.name || 'Member'}</span>
+                        <button onclick="handleLogout()" class="text-[9px] text-zinc-500 hover:text-white">Logout</button>
+                    </div>
+                </div>
+            `;
+
+            // Real-time listener for User Data
+            const userRef = db.collection('users').doc(uid);
+            userDataListener = userRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Merge server data with local session
+                    sessionData = { 
+                        ...sessionData, 
+                        btc: data.btc || 0,
+                        idr: data.idr || 0,
+                        multiplier: data.multiplier || 0,
+                        history: data.history || [],
+                        bank: data.bank || '-',
+                        bankAcc: data.bankAcc || '-',
+                        name: data.name || 'Member',
+                        refCode: data.refCode || ''
+                    };
+                    // Refresh header name if changed
+                    document.querySelector('#auth-actions span.text-xs.font-bold').innerText = sessionData.name;
+                    document.querySelector('#auth-actions div.rounded-full span').innerText = sessionData.name.charAt(0).toUpperCase();
+                    
+                    updateDisplay();
+                    startMiningLoop();
+                } else {
+                    console.log("No user data found");
+                }
+            }, (error) => {
+                console.error("Firestore Error:", error);
+                showMessage("Gagal memuat data");
+            });
+
+            startCryptoPriceUpdate();
+        }
+
+        function saveToFirestore() {
+            if (!currentUser) return;
+            
+            const userRef = db.collection('users').doc(currentUser.uid);
+            userRef.set({
+                btc: sessionData.btc,
+                idr: sessionData.idr,
+                multiplier: sessionData.multiplier,
+                history: sessionData.history,
+                name: sessionData.name,
+                bank: sessionData.bank,
+                bankAcc: sessionData.bankAcc,
+                refCode: sessionData.refCode,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).catch(e => console.error("Save failed", e));
+        }
+
+        // --- UI RENDERERS ---
+        function renderGuest() {
+            document.getElementById('guest-view').classList.remove('hidden');
+            document.getElementById('main-view').classList.add('hidden');
+            document.getElementById('bottom-nav').classList.add('hidden');
+            document.getElementById('auth-actions').innerHTML = `
+                <button onclick="openAuth('login')" class="text-xs font-black uppercase tracking-widest text-zinc-500">Masuk</button>
+            `;
+        }
+
+        function updateDisplay() {
+            document.getElementById('display-idr').innerText = Math.floor(sessionData.idr).toLocaleString('id-ID');
+            document.getElementById('display-btc').innerText = sessionData.btc.toFixed(8);
+            
+            const speedVal = sessionData.multiplier;
+            document.getElementById('display-speed-badge').innerHTML = `<span class="text-[10px] font-black italic">${speedVal}x SPEED</span>`;
+            
+            document.getElementById('ref-code-text').innerText = sessionData.refCode || 'HEYLO-XXXX';
+            
+            renderHistory();
+        }
+
+        function startMiningLoop() {
+            if (miningInterval) clearInterval(miningInterval);
+            const baseGain = 0.00000001;
+            
+            miningInterval = setInterval(() => {
+                if (sessionData.multiplier > 0) {
+                    sessionData.btc += (baseGain * sessionData.multiplier);
+                    const progress = (sessionData.btc * 10000000) % 100;
+                    document.getElementById('mining-bar').style.width = `${progress}%`;
+                    document.getElementById('display-btc').innerText = sessionData.btc.toFixed(8);
+                    if (Math.random() < 0.1) saveToFirestore();
+                }
+            }, 1000);
+        }
+
+        function startCryptoPriceUpdate() {
+            if (cryptoUpdateInterval) clearInterval(cryptoUpdateInterval);
+            
+            cryptoUpdateInterval = setInterval(() => {
+                Object.keys(cryptoPrices).forEach(crypto => {
+                    const changePercent = (Math.random() * 6) - 3;
+                    cryptoPrices[crypto] = Math.floor(cryptoPrices[crypto] * (1 + changePercent / 100));
+                    
+                    const priceElement = document.getElementById(`${crypto}-price`);
+                    if (priceElement) {
+                        priceElement.innerText = cryptoPrices[crypto].toLocaleString('id-ID');
+                        const parent = priceElement.closest('.crypto-card');
+                        const indicator = parent.querySelector('.price-up, .price-down');
+                        if (indicator) {
+                            indicator.className = `text-xs ${changePercent >= 0 ? 'price-up' : 'price-down'}`;
+                            indicator.innerText = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(1)}%`;
+                        }
+                    }
+                });
+            }, 5000);
+        }
+
+        // --- AUTH LOGIC ---
+        function openAuth(mode) {
+            const modal = document.getElementById('auth-modal');
+            const content = document.getElementById('auth-form-content');
+            const title = document.getElementById('auth-title');
+            modal.classList.remove('hidden');
+            
+            if (mode === 'login') {
+                title.innerText = 'Masuk Akun';
+                content.innerHTML = `
+                    <input id="l-email" type="email" placeholder="Email" class="w-full bg-black border border-white/5 p-4 rounded-2xl outline-none focus:border-white transition-all text-sm">
+                    <input id="l-pass" type="password" placeholder="Password" class="w-full bg-black border border-white/5 p-4 rounded-2xl outline-none focus:border-white transition-all text-sm">
+                    <button onclick="processLogin()" id="btn-login" class="w-full bg-white text-black py-4 rounded-2xl font-black mt-2">MASUK</button>
+                `;
+            } else {
+                title.innerText = 'Daftar Akun';
+                content.innerHTML = `
+                    <input id="r-name" type="text" placeholder="Nama Lengkap" class="w-full bg-black border border-white/5 p-4 rounded-2xl outline-none text-sm">
+                    <input id="r-email" type="email" placeholder="Email Address" class="w-full bg-black border border-white/5 p-4 rounded-2xl outline-none text-sm">
+                    <input id="r-phone" type="tel" placeholder="Nomor HP" class="w-full bg-black border border-white/5 p-4 rounded-2xl outline-none text-sm">
+                    <input id="r-ref" type="text" placeholder="Kode Referral (Opsional)" class="w-full bg-black border border-white/5 p-4 rounded-2xl outline-none text-sm">
+                    <select id="r-bank" class="w-full bg-black border border-white/5 p-4 rounded-2xl outline-none text-zinc-400 text-sm">
+                        <option value="BCA">BANK BCA</option>
+                        <option value="BNI">BANK BNI</option>
+                        <option value="BRI">BANK BRI</option>
+                        <option value="MANDIRI">BANK MANDIRI</option>
+                        <option value="MANDIRI">DANA</option>
+                    </select>
+                    <input id="r-norek" type="number" placeholder="Nomor Rekening" class="w-full bg-black border border-white/5 p-4 rounded-2xl outline-none text-sm">
+                    <input id="r-pass" type="password" placeholder="Password" class="w-full bg-black border border-white/5 p-4 rounded-2xl outline-none text-sm">
+                    <button onclick="processRegister()" id="btn-register" class="w-full bg-white text-black py-4 rounded-2xl font-black mt-2">BUAT AKUN</button>
+                `;
+            }
+        }
+
+        async function processRegister() {
+            const btn = document.getElementById('btn-register');
+            const originalText = btn.innerText;
+            btn.innerHTML = '<div class="spinner mx-auto"></div>';
+            
+            const email = document.getElementById('r-email').value;
+            const pass = document.getElementById('r-pass').value;
+            const name = document.getElementById('r-name').value;
+            const phone = document.getElementById('r-phone').value;
+            const bank = document.getElementById('r-bank').value;
+            const norek = document.getElementById('r-norek').value;
+            const refInput = document.getElementById('r-ref').value;
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
+                const uid = userCredential.user.uid;
+                const myRefCode = `HEYLO-${phone.slice(-4)}`;
+                
+                await db.collection('users').doc(uid).set({
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    bank: bank,
+                    bankAcc: norek,
+                    btc: 0,
+                    idr: 0,
+                    multiplier: 0,
+                    history: [],
+                    refCode: myRefCode,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                if (refInput) {
+                    // Referral logic
+                }
+                
+                closeAuth();
+                showMessage("Pendaftaran Berhasil!");
+                
+            } catch (error) {
+                console.error(error);
+                showMessage(error.message);
+            } finally {
+                btn.innerText = originalText;
+            }
+        }
+
+        async function processLogin() {
+            const btn = document.getElementById('btn-login');
+            const originalText = btn.innerText;
+            btn.innerHTML = '<div class="spinner mx-auto"></div>';
+            
+            const email = document.getElementById('l-email').value;
+            const pass = document.getElementById('l-pass').value;
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, pass);
+                closeAuth();
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                btn.innerText = originalText;
+            }
+        }
+
+        function handleLogout() {
+            auth.signOut().then(() => {
+                clearInterval(miningInterval);
+                clearInterval(cryptoUpdateInterval);
+                showMessage("Berhasil Logout");
+            });
+        }
+
+        function closeAuth() { document.getElementById('auth-modal').classList.add('hidden'); }
+
+        // --- CORE ACTIONS ---
+        function handleExchange() {
+            if (sessionData.btc < 0.00000010) return showMessage("Hasil mining belum cukup ditukar!");
+            const gained = sessionData.btc * BTC_RATE;
+            sessionData.idr += gained;
+            addHistory('Exchange', gained, 'BTC to IDR');
+            sessionData.btc = 0;
+            saveToFirestore();
+            updateDisplay();
+            showMessage(`Berhasil tukar ke Rp ${Math.floor(gained).toLocaleString()}`);
+        }
+
+        function handleDeposit(amount, mult) {
+            if (!currentUser) return showMessage("Silakan login terlebih dahulu!");
+            showPaymentPage(amount, mult);
+        }
+
+        function openWithdraw() {
+            if (sessionData.idr < 50000) return showMessage("Minimal withdraw Rp 50.000");
+            
+            document.getElementById('wd-bank-name').innerText = sessionData.bank;
+            document.getElementById('wd-user-name').innerText = sessionData.name;
+            document.getElementById('wd-bank-acc').innerText = sessionData.bankAcc;
+            
+            setWithdrawAmount(50000);
+            
+            const overlay = document.getElementById('withdraw-overlay');
+            const popup = document.getElementById('withdraw-popup');
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.style.opacity = "1";
+                popup.classList.add('active');
+            }, 10);
+        }
+
+        function closeWithdraw() {
+            const overlay = document.getElementById('withdraw-overlay');
+            const popup = document.getElementById('withdraw-popup');
+            overlay.style.opacity = "0";
+            popup.classList.remove('active');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+
+        function setWithdrawAmount(amount) {
+            if (amount > sessionData.idr) amount = sessionData.idr;
+            withdrawAmount = amount;
+            document.getElementById('wd-total-text').innerText = Math.floor(amount).toLocaleString('id-ID');
+        }
+
+        function confirmWithdrawal() {
+            if (withdrawAmount < 50000) return showMessage("Minimal withdraw Rp 50.000");
+            
+            sessionData.idr -= withdrawAmount;
+            addHistory('Withdraw', withdrawAmount, sessionData.bank);
+            saveToFirestore();
+            updateDisplay();
+            closeWithdraw();
+            showMessage("Penarikan sedang diproses!");
+        }
+
+        // --- PAYMENT FUNCTIONS (UPDATED) ---
+        function showPaymentPage(amount, mult) {
+            pendingPayment.amount = amount;
+            pendingPayment.multiplier = mult;
+            
+            const paymentPage = document.createElement('div');
+            paymentPage.className = 'fixed inset-0 z-[200] bg-black flex flex-col';
+            paymentPage.id = 'payment-page';
+            
+            // Saldo saat ini untuk user info
+            const currentBalance = Math.floor(sessionData.idr).toLocaleString('id-ID');
+            
+            paymentPage.innerHTML = `
+                <div class="sticky top-0 z-10 bg-black/80 backdrop-blur-md p-5 flex items-center border-b border-white/5">
+                    <button onclick="closePaymentPage()" class="mr-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <h2 class="text-xl font-black">Pembayaran</h2>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                    <div class="max-w-md mx-auto">
+                        <div class="glass rounded-[2rem] p-6 mb-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-zinc-500 text-sm font-bold">Paket Kecepatan</span>
+                                <span class="text-lg font-black">${mult}x Speed</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-zinc-500 text-sm font-bold">Total Harga</span>
+                                <span class="text-xl font-black text-yellow-400">Rp ${amount.toLocaleString('id-ID')}</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-2 text-xs text-zinc-400">
+                                <span>Saldo Akun Anda</span>
+                                <span class="text-white font-mono">Rp ${currentBalance}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-sm font-black mb-3">Metode Pembayaran</h3>
+                                <div class="grid grid-cols-1 gap-3">
+                                    
+                                    <!-- 1. SALDO AKUN -->
+                                    <button onclick="selectPaymentMethod('saldo')" id="btn-method-saldo" class="payment-card border border-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/5 transition-all">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-wallet text-white"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <span class="text-xs font-bold block">Saldo Akun</span>
+                                                <span class="text-[10px] text-zinc-400">Pembayaran Instan</span>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-zinc-500"></i>
+                                    </button>
+
+                                    <div class="relative py-2 flex items-center justify-center">
+                                        <div class="border-t border-white/10 w-full absolute"></div>
+                                        <span class="bg-black px-3 text-[10px] text-zinc-500 font-bold relative z-10">TRANSFER E-WALLET / QR</span>
+                                    </div>
+
+                                    <!-- 2. DANA -->
+                                    <button onclick="selectPaymentMethod('dana')" id="btn-method-dana" class="payment-card border border-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/5 transition-all">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-blue-800 rounded-lg flex items-center justify-center">
+                                                <span class="text-white font-bold text-xs">DANA</span>
+                                            </div>
+                                            <div class="text-left">
+                                                <span class="text-xs font-bold block">DANA</span>
+                                                <span class="text-[10px] text-zinc-400">085717377589</span>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-zinc-500"></i>
+                                    </button>
+
+                                    <!-- 3. QRIS -->
+                                    <button onclick="selectPaymentMethod('qris')" id="btn-method-qris" class="payment-card border border-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/5 transition-all">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-black border border-white/20 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-qrcode text-white"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <span class="text-xs font-bold block">QRIS</span>
+                                                <span class="text-[10px] text-zinc-400">Scan QR Code</span>
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-zinc-500"></i>
+                                    </button>
+                                    
+                                    <div class="relative py-2 flex items-center justify-center">
+                                        <div class="border-t border-white/10 w-full absolute"></div>
+                                        <span class="bg-black px-3 text-[10px] text-zinc-500 font-bold relative z-10">TRANSFER BANK</span>
+                                    </div>
+
+                                    <!-- BANKS (DISABLED / MAINTENANCE) -->
+                                    <div class="payment-card disabled border border-white/10 p-4 rounded-xl flex items-center justify-between opacity-50">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                                                <span class="text-white font-bold text-xs">BCA</span>
+                                            </div>
+                                            <div class="text-left">
+                                                <span class="text-xs font-bold block text-zinc-400">Bank Transfer</span>
+                                                <span class="text-[10px] text-zinc-600">BCA, BRI, BNI, Mandiri</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            
+                            <!-- Dynamic Payment Info -->
+                            <div id="payment-instruction-box" class="glass rounded-[2rem] p-6 mt-4 hidden text-center animate-fadeIn">
+                                <!-- Content injected by JS -->
+                            </div>
+                            
+                            <!-- Proof Upload (Only for Non-Saldo) -->
+                            <div id="proof-upload-section" class="hidden">
+                                <h3 class="text-sm font-black mb-3">Upload Bukti Pembayaran</h3>
+                                <div class="border-2 border-dashed border-white/20 rounded-2xl p-8 text-center cursor-pointer hover:bg-white/5 transition-all" onclick="document.getElementById('payment-proof').click()">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-zinc-600 mb-3"></i>
+                                    <p class="text-sm font-bold">Klik untuk upload bukti</p>
+                                    <input type="file" id="payment-proof" class="hidden" accept="image/*" onchange="handleProofUpload(this)">
+                                </div>
+                                <div id="proof-preview" class="hidden mt-3">
+                                    <div class="relative">
+                                        <img id="proof-img" class="w-full h-40 object-cover rounded-xl">
+                                        <button onclick="removeProof()" class="absolute top-2 right-2 bg-black/70 text-white w-6 h-6 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sticky bottom-0 z-10 bg-black/80 backdrop-blur-md p-6 border-t border-white/5">
+                    <div class="max-w-md mx-auto">
+                        <button id="pay-button" onclick="processPayment()" disabled class="w-full bg-white text-black py-5 rounded-2xl font-black text-lg opacity-50 transition-all flex justify-center items-center gap-2">
+                            <span id="pay-text">BAYAR SEKARANG</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(paymentPage);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function selectPaymentMethod(method) {
+            pendingPayment.method = method;
+            const instructionBox = document.getElementById('payment-instruction-box');
+            const proofSection = document.getElementById('proof-upload-section');
+            const payButton = document.getElementById('pay-button');
+            const payText = document.getElementById('pay-text');
+            
+            // UI Reset
+            document.querySelectorAll('.payment-card').forEach(el => {
+                el.classList.remove('selected', 'border-white', 'bg-white/10');
+                el.classList.add('border-white/10');
+            });
+
+            // Highlight selected (only if not disabled)
+            const selectedBtn = document.getElementById(`btn-method-${method}`);
+            if(selectedBtn) {
+                selectedBtn.classList.remove('border-white/10');
+                selectedBtn.classList.add('selected', 'border-white', 'bg-white/10');
+            }
+
+            instructionBox.classList.remove('hidden');
+            proofSection.classList.add('hidden'); // Hide proof by default
+            payButton.disabled = true;
+            payButton.classList.add('opacity-50');
+            
+            if (method === 'saldo') {
+                // Saldo Akun Logic
+                if (sessionData.idr < pendingPayment.amount) {
+                    instructionBox.innerHTML = `
+                        <div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                            <p class="text-red-400 text-sm font-bold">Saldo Tidak Cukup</p>
+                            <p class="text-xs text-red-400/70 mt-1">Saldo Anda: Rp ${Math.floor(sessionData.idr).toLocaleString()}</p>
+                            <p class="text-xs text-red-400/70">Butuh: Rp ${pendingPayment.amount.toLocaleString()}</p>
+                        </div>
+                    `;
+                    payButton.disabled = true;
+                } else {
+                    instructionBox.innerHTML = `
+                        <div class="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                            <p class="text-green-400 text-sm font-bold">Pembayaran Otomatis</p>
+                            <p class="text-xs text-zinc-400 mt-1">Saldo akan otomatis terpotong Rp ${pendingPayment.amount.toLocaleString()}</p>
+                        </div>
+                    `;
+                    payButton.disabled = false;
+                    payButton.classList.remove('opacity-50');
+                    payText.innerText = "BELI PAKET SEKARANG";
+                }
+            } else if (method === 'qris') {
+                // QRIS Logic (Heylo lte tbk)
+                instructionBox.innerHTML = `
+                    <p class="text-xs font-bold text-zinc-400 mb-2">SCAN QRIS INI</p>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=085717377589" class="mx-auto mb-2 mix-blend-lighten invert">
+                    <p class="text-[10px] text-zinc-500">NMID: ID1020304050</p>
+                    <div class="mt-3 bg-black/40 p-2 rounded border border-white/5">
+                        <p class="text-[10px] text-zinc-500">a.n HEYLO LTE TBK</p>
+                    </div>
+                `;
+                proofSection.classList.remove('hidden'); // Need proof for QRIS
+                // Enable button if proof exists
+                if (pendingPayment.proof) {
+                    payButton.disabled = false;
+                    payButton.classList.remove('opacity-50');
+                    payText.innerText = "KIRIM BUKTI TRANSFER";
+                }
+
+            } else if (method === 'dana') {
+                // DANA Logic
+                instructionBox.innerHTML = `
+                    <p class="text-xs font-bold text-zinc-400 mb-4">SILAKAN TRANSFER KE</p>
+                    <div class="bg-black/40 rounded-xl p-4 border border-white/5 mb-2">
+                        <p class="text-3xl font-mono font-black tracking-tighter mb-1 text-white">085717377589</p>
+                        <p class="text-xs font-bold text-zinc-400 uppercase">a.n HEYLO LTE TBK</p>
+                    </div>
+                    <div class="flex justify-center">
+                        <button onclick="copyToClipboard('085717377589')" class="text-[10px] bg-white/10 px-3 py-1 rounded text-zinc-300 hover:text-white">
+                            <i class="far fa-copy mr-1"></i> Salin Nomor
+                        </button>
+                    </div>
+                `;
+                proofSection.classList.remove('hidden'); // Need proof for DANA
+                // Enable button if proof exists
+                if (pendingPayment.proof) {
+                    payButton.disabled = false;
+                    payButton.classList.remove('opacity-50');
+                    payText.innerText = "KIRIM BUKTI TRANSFER";
+                }
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showMessage("Nomor disalin!");
+        }
+
+        function handleProofUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pendingPayment.proof = e.target.result;
+                    document.getElementById('proof-preview').classList.remove('hidden');
+                    document.getElementById('proof-img').src = e.target.result;
+                    
+                    // Enable button
+                    const btn = document.getElementById('pay-button');
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50');
+                    document.getElementById('pay-text').innerText = "KIRIM BUKTI TRANSFER";
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeProof() {
+            pendingPayment.proof = '';
+            document.getElementById('proof-preview').classList.add('hidden');
+            document.getElementById('payment-proof').value = '';
+            const btn = document.getElementById('pay-button');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+        }
+
+        function processPayment() {
+            if (!pendingPayment.method) return showMessage("Pilih metode pembayaran");
+            
+            const btn = document.getElementById('pay-button');
+            const originalText = document.getElementById('pay-text').innerText;
+            
+            // Loading State
+            btn.disabled = true;
+            btn.innerHTML = `<div class="spinner"></div> <span id="pay-loading-text">MEMPROSES...</span>`;
+            
+            // Logic based on method
+            if (pendingPayment.method === 'saldo') {
+                // Check balance again to be safe
+                if (sessionData.idr >= pendingPayment.amount) {
+                    setTimeout(() => {
+                        sessionData.idr -= pendingPayment.amount;
+                        sessionData.multiplier = pendingPayment.multiplier; 
+                        addHistory('Topup', pendingPayment.amount, `${pendingPayment.multiplier}x Speed - Saldo Akun`);
+                        addHistory('Upgrade', 0, `Upgrade Speed ke ${pendingPayment.multiplier}x`);
+                        
+                        saveToFirestore();
+                        closePaymentPage();
+                        updateDisplay();
+                        showMessage("Pembelian Berhasil! Speed naik ke " + sessionData.multiplier + "x");
+                        startMiningLoop();
+                    }, 1000); // Fast processing for Balance
+                } else {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    showMessage("Saldo tidak mencukupi!");
+                }
+            } else {
+                // Manual Methods (DANA/QRIS) - Simulate Verification
+                if (!pendingPayment.proof) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return showMessage("Harap upload bukti pembayaran");
+                }
+
+                setTimeout(() => {
+                    sessionData.multiplier = pendingPayment.multiplier; 
+                    
+                    addHistory('Topup', pendingPayment.amount, `${pendingPayment.multiplier}x Speed - ${pendingPayment.method.toUpperCase()}`);
+                    addHistory('Upgrade', 0, `Upgrade Speed ke ${pendingPayment.multiplier}x`);
+                    
+                    updateDisplay();
+                    saveToFirestore();
+                    closePaymentPage();
+                    showMessage("Pembayaran Diterima! Speed naik ke " + sessionData.multiplier + "x");
+                    startMiningLoop();
+                }, 3000); // 3 Seconds loading simulation
+            }
+        }
+
+        function closePaymentPage() {
+            const page = document.getElementById('payment-page');
+            if (page) {
+                page.remove();
+                document.body.style.overflow = '';
+            }
+            pendingPayment = { amount: 0, multiplier: 0, method: '', proof: '' };
+        }
+
+        // --- GESTURE SYSTEM ---
+        let touchStart = 0;
+        let touchCurrent = 0;
+        const swipeArea = document.getElementById('swipe-area');
+        const popupEl = document.getElementById('withdraw-popup');
+
+        if (swipeArea) {
+            swipeArea.addEventListener('touchstart', (e) => {
+                touchStart = e.touches[0].clientY;
+            });
+
+            swipeArea.addEventListener('touchmove', (e) => {
+                touchCurrent = e.touches[0].clientY;
+                const delta = touchCurrent - touchStart;
+                if (delta > 0) {
+                    popupEl.style.transition = 'none';
+                    popupEl.style.transform = `translateY(${delta}px)`;
+                }
+            });
+
+            swipeArea.addEventListener('touchend', () => {
+                const delta = touchCurrent - touchStart;
+                popupEl.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)';
+                if (delta > 150) closeWithdraw();
+                else popupEl.style.transform = 'translateY(0%)';
+                touchStart = 0;
+                touchCurrent = 0;
+            });
+        }
+
+        // --- UTILS ---
+        function switchTab(tab) {
+            document.querySelectorAll('.page-fade').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`page-${tab}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.add('opacity-40'));
+            document.getElementById(`btn-${tab}`).classList.remove('opacity-40');
+        }
+
+        function showMessage(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            t.classList.remove('-translate-y-32');
+            t.classList.add('translate-y-0');
+            setTimeout(() => {
+                t.classList.remove('translate-y-0');
+                t.classList.add('-translate-y-32');
+            }, 3000);
+        }
+
+        function addHistory(type, amount, desc) {
+            sessionData.history.unshift({
+                type, amount, desc, 
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                status: 'success'
+            });
+            if (sessionData.history.length > 20) sessionData.history.pop();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            if (sessionData.history.length === 0) {
+                container.innerHTML = `<p class="text-center py-20 text-zinc-600 text-xs font-bold uppercase tracking-widest">Belum ada riwayat</p>`;
+                return;
+            }
+            
+            container.innerHTML = sessionData.history.map(h => {
+                return `
+                    <div class="glass p-5 rounded-3xl flex justify-between items-center border-white/5">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <p class="text-xs font-black uppercase tracking-tight">${h.type}</p>
+                            </div>
+                            <p class="text-[10px] text-zinc-500 font-bold">${h.desc} • ${h.time}</p>
+                        </div>
+                        <p class="font-black text-sm ${h.type === 'Withdraw' || h.type === 'Topup' ? 'text-white' : 'text-green-400'}">
+                            ${h.type === 'Withdraw' ? '-' : h.type === 'Topup' || h.type === 'Upgrade' ? '+' : ''}${h.amount > 0 ? 'Rp ' + Math.floor(h.amount).toLocaleString() : ''}
+                        </p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function copyReferral() {
+            const code = sessionData.refCode;
+            const url = window.location.href + "?ref=" + code;
+            navigator.clipboard.writeText(url);
+            showMessage("Link Referral Disalin!");
+            
+            sessionData.idr += 5000;
+            addHistory('Referral', 5000, 'Komisi Bagikan Link');
+            saveToFirestore();
+            updateDisplay();
+        }
+
+        function shareWhatsApp() {
+            const code = sessionData.refCode;
+            const url = window.location.href + "?ref=" + code;
+            const message = `Halo, saya ingin mengundang Anda bergabung dengan Heylo Pro. Kode referral: ${code}. Daftar di: ${url}`;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            sessionData.idr += 10000;
+            addHistory('Referral', 10000, 'Komisi Bagikan WhatsApp');
+            saveToFirestore();
+            updateDisplay();
+        }
+
+        // Start App
+        window.onload = initApp;
+    </script>
+</body>
+</html>
